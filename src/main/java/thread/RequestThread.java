@@ -28,11 +28,8 @@ public class RequestThread extends Thread{
                 socket.receive(packet);
                 InetAddress addr = packet.getAddress();
                 int port = packet.getPort();
-//                System.out.println(packet.getAddress().getHostAddress());
-//                System.out.println(packet.getPort());
                 String receiveMsg = new String(packet.getData(),0,packet.getLength());
 
-//                System.out.println(packet.getLength());
                 System.out.println(receiveMsg);
                 String response = roomManager.getInfo();
 

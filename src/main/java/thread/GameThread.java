@@ -2,8 +2,6 @@ package thread;
 
 import Manager.RoomManager;
 import entity.GameRoom;
-//import entity.Result;
-
 import java.io.*;
 import java.net.Socket;
 
@@ -14,6 +12,7 @@ public class GameThread extends Thread {
     private static boolean TURN = true;
     private static final int[][] chessBoard = new int[3][3];
     private boolean win = false;
+    private boolean full = false;
     String p1;
     String p2;
     Socket splayer1;
@@ -36,26 +35,11 @@ public class GameThread extends Thread {
     public void run() {
         //告诉双方游戏开始 前端初始化游戏界面
         try {
-            OutputStream os1 = splayer1.getOutputStream();
-//            OutputStream os2 = splayer2.getOutputStream();
-//            String send_str1 = "gameStart player1";
-//            String send_str2 = "gameStart player2";
-//            byte[] send_bytes1 = send_str1.getBytes();
-//            byte[] send_bytes2 = send_str2.getBytes();
-//            os1.write(send_bytes1);
-//            os1.flush();
-//            os2.write(send_bytes2);
-//            os2.flush();
-
             String start_mess = "ok to start";
             byte[] send_bytes1 = start_mess.getBytes();
-            os1 = splayer1.getOutputStream();
+            OutputStream os1 = splayer1.getOutputStream();
             os1.write(send_bytes1);
             os1.flush();
-//            Result init = new Result(chessBoard,false,200,p1,p2);
-//            ObjectOutputStream oos1 = new ObjectOutputStream(os1);
-//            oos1.writeObject(init);
-//            oos1.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -73,76 +57,46 @@ public class GameThread extends Thread {
                 chessBoard[x][y] = TURN ? PLAY_1 : PLAY_2;
                 win = checkWin(x, y);
                 TURN = !TURN;
-//                Result res = new Result(chessBoard, win, 200, p1, p2);
                 //返回报文格式：是否获胜 双方都发
                 String is_win = win? "Yes ":"No ";
-                is_win += x +" "+y;
+                is_win += x +" "+y+ " ";
+                //检查是否终局
+                full = checkFull();
+                if (full) is_win += "full";
                 byte[] send_win = is_win.getBytes();
                 OutputStream os1 = splayer1.getOutputStream();
                 os1.write(send_win);
                 os1.flush();
-//                splayer1.shutdownOutput();
                 OutputStream os2 = splayer2.getOutputStream();
                 os2.write(send_win);
                 os2.flush();
-//                splayer2.shutdownOutput();
 
-
-
-//                serialize(res);
-
-                if (win) break;//游戏结束
+                if (win||full) break;//游戏结束
 
                 InputStream is2 = splayer2.getInputStream();
                 byte[] buf2 = new byte[1024];
                 int readLen2 = 0;
                 readLen2 = is2.read(buf2);
                 String action_str2 = new String(buf2, 0, readLen2);
-
                 //处理数据 拿到 x y
                 int x2 = Integer.parseInt(action_str2.split(" ")[0]);
                 int y2 = Integer.parseInt(action_str2.split(" ")[1]);
                 chessBoard[x2][y2] = TURN ? PLAY_1 : PLAY_2;
                 win = checkWin(x2, y2);
                 TURN = !TURN;
-//                Result res2 = new Result(chessBoard, win, 200, p1, p2);
-//                serialize(res2);
                 is_win = win? "Yes ":"No ";
-                is_win += x2 +" "+y2;
+                is_win += x2 +" "+y2+ " ";
+                if (full) is_win += "full";
                 send_win = is_win.getBytes();
                 os1 = splayer1.getOutputStream();
                 os1.write(send_win);
                 os1.flush();
-//                splayer1.shutdownOutput();
                 os2 = splayer2.getOutputStream();
                 os2.write(send_win);
                 os2.flush();
-//                splayer2.shutdownOutput();
-
-                if (win) break;//游戏结束
-
-//
-//
-//
-//                os = socket.getOutputStream();
-//                pw = new PrintWriter(os);
-//                pw.write("服务器欢迎你");
-//
-//                pw.flush();
-//                splayer1.shutdownInput();
-//                splayer2.shutdownInput();
+                if (win||full) break;//游戏结束
             } catch (Exception e) {
                 // TODO: handle exception
-//            } finally {
-//                //关闭资源
-//                try {
-//                    if (splayer1 != null)
-//                        splayer1.close();
-//                    if (splayer2 != null)
-//                        splayer2.close();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
             }
         }
         try {
@@ -171,91 +125,12 @@ public class GameThread extends Thread {
         }
         return false;
     }
-
-    private boolean refreshBoard(int x, int y) {
-        if (chessBoard[x][y] == EMPTY) {
-            chessBoard[x][y] = TURN ? PLAY_1 : PLAY_2;
-//            drawChess();
-            return true;
+    public boolean checkFull() {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (chessBoard[i][j]==EMPTY) return false;
+            }
         }
-        return false;
+        return true;
     }
-
-//    public void serialize(Serializable obj) throws Exception {
-//        if (obj != null) {
-//            OutputStream os1 = null;
-//            OutputStream os2 = null;
-//            ObjectOutputStream oos1 = null;
-//            ObjectOutputStream oos2 = null;
-//            try {
-//                os1 = this.splayer1.getOutputStream();
-//                os2 = this.splayer2.getOutputStream();
-//                oos1 = new ObjectOutputStream(os1);
-//                oos2 = new ObjectOutputStream(os2);
-//                oos1.writeObject(obj);
-//                oos1.flush();
-//                oos2.writeObject(obj);
-//                oos2.flush();
-//
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                throw new Exception("序列化对象失败：" + String.valueOf(obj));
-//            } finally {
-//                try {
-//                    if (os1 != null) {
-//                        os1.close();
-//                    }
-//                    if (oos1 != null) {
-//                        oos1.close();
-//                    }
-//                    if (os2 != null) {
-//                        os2.close();
-//                    }
-//                    if (oos2 != null) {
-//                        oos2.close();
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-//    }
-
-//    public static String bytesToString(byte[] bytes) {
-//        //转换成base64
-//        return org.apache.commons.codec.binary.Base64.encodeBase64String(bytes);
-//    }
-//
-//    public static byte[] stringToByte(String str) throws DecoderException {
-//        //转换成base64
-//        return org.apache.commons.codec.binary.Base64.decodeBase64(str);
-//    }
-//
-//    public static <T extends Serializable> T deserialize(String str) throws Exception{
-//        if(StringUtils.isNotEmpty(str)){
-//            ByteArrayInputStream bai=null;
-//            ObjectInputStream ois=null;
-//            try{
-//                bai=new ByteArrayInputStream(stringToByte(str));
-//                ois=new ObjectInputStream(bai);
-//                return (T)ois.readObject();
-//            }catch (Exception e){
-//                e.printStackTrace();
-//                throw new Exception("字符串反序列化对象失败："+String.valueOf(str));
-//            }finally {
-//                try {
-//                    if(ois!=null){
-//                        ois.close();
-//                    }
-//                    if(bai!=null){
-//                        bai.close();
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-//        return null;
-//    }
-
 }
