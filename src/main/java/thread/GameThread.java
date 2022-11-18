@@ -2,6 +2,7 @@ package thread;
 
 import Manager.RoomManager;
 import entity.GameRoom;
+
 import java.io.*;
 import java.net.Socket;
 
@@ -45,6 +46,7 @@ public class GameThread extends Thread {
         }
         while (true) {
             try {
+                System.out.println("1");
                 InputStream is1 = splayer1.getInputStream();
                 byte[] buf1 = new byte[1024];
                 int readLen = 0;
@@ -58,8 +60,8 @@ public class GameThread extends Thread {
                 win = checkWin(x, y);
                 TURN = !TURN;
                 //返回报文格式：是否获胜 双方都发
-                String is_win = win? "Yes ":"No ";
-                is_win += x +" "+y+ " ";
+                String is_win = win ? "Yes " : "No ";
+                is_win += x + " " + y + " ";
                 //检查是否终局
                 full = checkFull();
                 if (full) is_win += "full";
@@ -71,8 +73,9 @@ public class GameThread extends Thread {
                 os2.write(send_win);
                 os2.flush();
 
-                if (win||full) break;//游戏结束
+                if (win || full) break;//游戏结束
 
+                System.out.println("2");
                 InputStream is2 = splayer2.getInputStream();
                 byte[] buf2 = new byte[1024];
                 int readLen2 = 0;
@@ -84,8 +87,8 @@ public class GameThread extends Thread {
                 chessBoard[x2][y2] = TURN ? PLAY_1 : PLAY_2;
                 win = checkWin(x2, y2);
                 TURN = !TURN;
-                is_win = win? "Yes ":"No ";
-                is_win += x2 +" "+y2+ " ";
+                is_win = win ? "Yes " : "No ";
+                is_win += x2 + " " + y2 + " ";
                 if (full) is_win += "full";
                 send_win = is_win.getBytes();
                 os1 = splayer1.getOutputStream();
@@ -94,19 +97,19 @@ public class GameThread extends Thread {
                 os2 = splayer2.getOutputStream();
                 os2.write(send_win);
                 os2.flush();
-                if (win||full) break;//游戏结束
+                if (win || full) break;//游戏结束
             } catch (Exception e) {
                 // TODO: handle exception
             }
         }
-        try {
-            if (splayer1 != null)
-                splayer1.close();
-            if (splayer2 != null)
-                splayer2.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            if (splayer1 != null)
+//                splayer1.close();
+//            if (splayer2 != null)
+//                splayer2.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         state = false;
         roomManager.deleteRoom(gameRoom);
     }
@@ -119,16 +122,19 @@ public class GameThread extends Thread {
         int piece = chessBoard[x][y];
         if (chessBoard[x][0] == chessBoard[x][1] && chessBoard[x][1] == chessBoard[x][2]) return true;
         if (chessBoard[0][y] == chessBoard[1][y] && chessBoard[1][y] == chessBoard[2][y]) return true;
-        if (x == 1 && y == 1) {
-            if (chessBoard[0][0] == piece && chessBoard[2][2] == piece) return true;
-            if (chessBoard[0][2] == piece && chessBoard[2][0] == piece) return true;
+        if (x == y) {
+            if (chessBoard[0][0] == chessBoard[1][1] && chessBoard[2][2] == chessBoard[1][1]) return true;
+        }
+        if (x + y == 2) {
+            if (chessBoard[0][2] == chessBoard[1][1] && chessBoard[2][0] == chessBoard[1][1]) return true;
         }
         return false;
     }
+
     public boolean checkFull() {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                if (chessBoard[i][j]==EMPTY) return false;
+                if (chessBoard[i][j] == EMPTY) return false;
             }
         }
         return true;
