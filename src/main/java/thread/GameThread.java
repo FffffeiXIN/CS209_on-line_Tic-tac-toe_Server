@@ -5,6 +5,10 @@ import entity.GameRoom;
 
 import java.io.*;
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 public class GameThread extends Thread {
     private int PLAY_1 = 1;
@@ -121,6 +125,7 @@ public class GameThread extends Thread {
                 }
             } catch (Exception e) {
                 // TODO: handle exception
+                break;
             }
         }
 //        try {
@@ -131,6 +136,56 @@ public class GameThread extends Thread {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
+        try {
+            InputStream is1 = splayer1.getInputStream();
+            InputStream is2 = splayer2.getInputStream();
+            byte[] buf1 = new byte[1024];
+            byte[] buf2 = new byte[1024];
+            int readLen1 = 0;
+            int readLen2 = 0;
+            readLen1 = is1.read(buf1);
+            readLen2 = is2.read(buf2);
+            String close_str1 = new String(buf1, 0, readLen1);
+            String close_str2 = new String(buf2, 0, readLen2);
+            String[] info1 = close_str1.split(" ");
+            String[] info2 = close_str2.split(" ");
+            String name1 = info1[0];
+            String win1 = info1[1];
+            String lose1 = info1[2];
+            String draw1 = info1[3];
+            String name2 = info2[0];
+            String win2= info2[1];
+            String lose2 = info2[2];
+            String draw2 = info2[3];
+
+            Connection c = null;
+            Statement stmt = null;
+
+            try {
+                Class.forName("org.postgresql.Driver");
+                c = DriverManager.getConnection("jdbc:postgresql://10.16.4.246:5432/cs209_a2",
+                        "postgres", "123456");
+                System.out.println("Opened database successfully");
+
+                stmt = c.createStatement();
+                String sql1 = "UPDATE users set win = \'"+win1+"\', lose = \'" + lose1+ "\', draw = \'" + draw1+ "\' where name=\'"+ name1+"\';";
+                String sql2 = "UPDATE users set win = \'"+win2+"\', lose = \'" + lose2+ "\', draw = \'" + draw2+ "\' where name=\'"+ name2+"\';";
+                System.out.println(sql1);
+                System.out.println(sql2);
+                stmt.executeUpdate(sql1);
+                stmt.executeUpdate(sql2);
+                stmt.close();
+                c.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
         roomManager.deleteRoom(gameRoom);
     }
 
