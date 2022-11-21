@@ -1,6 +1,7 @@
 package thread;
 
 import Manager.RoomManager;
+import entity.GameRoom;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -39,60 +40,72 @@ public class RequestThread extends Thread {
                 //处理信息
 //                String name = receiveMsg.split(" ")[0];
 //                String passwd = receiveMsg.split(" ")[1];
-                String name = receiveMsg;
-                //连接数据库
-                Connection c = null;
-                Statement stmt = null;
-                int win=0;
-                int lose=0;
-                int draw=0;
-                try {
-                    Class.forName("org.postgresql.Driver");
-                    c = DriverManager.getConnection("jdbc:postgresql://10.16.4.246:5432/cs209_a2",
-                            "postgres", "123456");
-                    System.out.println("Opened database successfully");
+                String name = receiveMsg.split(" ")[0];
+                String operation = receiveMsg.split(" ")[1];
+                if (operation.equals("0")){
+                    //连接数据库
+                    Connection c = null;
+                    Statement stmt = null;
+                    int win=0;
+                    int lose=0;
+                    int draw=0;
+                    try {
+                        Class.forName("org.postgresql.Driver");
+                        c = DriverManager.getConnection("jdbc:postgresql://10.16.4.246:5432/cs209_a2",
+                                "postgres", "123456");
+                        System.out.println("Opened database successfully");
 
-                    stmt = c.createStatement();
-                    String sql = "SELECT * FROM users where name=\'" + name + "\';";
-                    System.out.println(sql);
-                    ResultSet rs = stmt.executeQuery(sql);
-                    boolean exit = false;
-                    while (rs.next()) {
-                        exit = true;
-                        win = rs.getInt("win");
-                        lose = rs.getInt("lose");
-                        draw = rs.getInt("draw");
-                        System.out.println("win = " + win);
-                        System.out.println("lose = " + lose);
-                        System.out.println("draw = " + draw);
-                        System.out.println();
-                    }
-                    if (!exit) {
-                        win = 0;
-                        lose = 0;
-                        draw = 0;
-                        sql = "INSERT INTO users (name,win,lose,draw) VALUES (\'" + name + "\', 0,0,0);";
+                        stmt = c.createStatement();
+                        String sql = "SELECT * FROM users where name=\'" + name + "\';";
                         System.out.println(sql);
-                        stmt.executeUpdate(sql);
+                        ResultSet rs = stmt.executeQuery(sql);
+                        boolean exit = false;
+                        while (rs.next()) {
+                            exit = true;
+                            win = rs.getInt("win");
+                            lose = rs.getInt("lose");
+                            draw = rs.getInt("draw");
+                            System.out.println("win = " + win);
+                            System.out.println("lose = " + lose);
+                            System.out.println("draw = " + draw);
+                            System.out.println();
+                        }
+                        if (!exit) {
+                            win = 0;
+                            lose = 0;
+                            draw = 0;
+                            sql = "INSERT INTO users (name,win,lose,draw) VALUES (\'" + name + "\', 0,0,0);";
+                            System.out.println(sql);
+                            stmt.executeUpdate(sql);
+                        }
+                        rs.close();
+                        stmt.close();
+                        c.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                        System.exit(0);
                     }
-                    rs.close();
-                    stmt.close();
-                    c.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.err.println(e.getClass().getName() + ": " + e.getMessage());
-                    System.exit(0);
+
+                    String response = win+" "+lose+" "+draw+"\r\n"+roomManager.getInfo();
+
+                    // 创建packet包对象，封装要发送的包数据和服务器地址和端口号
+                    DatagramPacket send_packet = new DatagramPacket(response.getBytes(),
+                            response.getBytes().length, addr, port);
+
+                    // 发送消息到服务器
+                    socket.send(send_packet);
                 }
-
-                String response = win+" "+lose+" "+draw+"\r\n"+roomManager.getInfo();
-
-                // 创建packet包对象，封装要发送的包数据和服务器地址和端口号
-                DatagramPacket send_packet = new DatagramPacket(response.getBytes(),
-                        response.getBytes().length, addr, port);
-
-                // 发送消息到服务器
-                socket.send(send_packet);
-
+                else if(operation.equals("1")){
+                    String response = roomManager.getInfo();
+                    DatagramPacket send_packet = new DatagramPacket(response.getBytes(),
+                            response.getBytes().length, addr, port);
+                    socket.send(send_packet);
+                }
+                else {
+                    GameRoom room = roomManager.getRoom(name);
+                    room.exit();
+                }
             }
             // 关闭socket
 //            socket.close();

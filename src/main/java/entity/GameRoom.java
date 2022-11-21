@@ -38,7 +38,11 @@ public class GameRoom {
         thread.start();
     }
 
-//    public void gameOver() {
-//        thread = null;
-//    }
+    public void exit() {
+        player1 = null;
+        p1 = null;
+        player2 = null;
+        p2 = null;
+        roomManager.deleteRoom(this);
+    }
 }
