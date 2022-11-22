@@ -1,14 +1,12 @@
 package thread;
 
-import Manager.RoomManager;
 import entity.GameRoom;
-
 import java.io.*;
 import java.net.Socket;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.Statement;
+import manager.RoomManager;
 
 public class GameThread extends Thread {
     private int PLAY_1 = 1;
@@ -83,7 +81,9 @@ public class GameThread extends Thread {
                     is_win += x + " " + y + " ";
                     //检查是否终局
                     full = checkFull();
-                    if (full) is_win += "full";
+                    if (full) {
+                        is_win += "full";
+                    }
                     byte[] send_win = is_win.getBytes();
                     OutputStream os1 = splayer1.getOutputStream();
                     normal1 = false;
@@ -96,7 +96,9 @@ public class GameThread extends Thread {
                     os2.flush();
                     normal2 = true;
 
-                    if (win || full) break;//游戏结束
+                    if (win || full) {
+                        break; //游戏结束
+                    }
 
                     normal2 = false;
                     System.out.println("2");
@@ -124,7 +126,9 @@ public class GameThread extends Thread {
                     TURN = !TURN;
                     is_win = win ? "Yes " : "No ";
                     is_win += x2 + " " + y2 + " ";
-                    if (full) is_win += "full";
+                    if (full) {
+                        is_win += "full";
+                    }
                     send_win = is_win.getBytes();
                     normal1 = false;
                     os1 = splayer1.getOutputStream();
@@ -136,12 +140,14 @@ public class GameThread extends Thread {
                     os2.write(send_win);
                     os2.flush();
                     normal2 = true;
-                    if (win || full) break;//游戏结束
+                    if (win || full) {
+                        break; //游戏结束
+                    }
                 }
             } catch (Exception e) {
                 // TODO: handle exception
                 //给客户发消息
-                if (!normal1){
+                if (!normal1) {
                     String exit_info = "oppExit";
                     byte[] send_exit = exit_info.getBytes();
                     OutputStream os = null;
@@ -153,8 +159,7 @@ public class GameThread extends Thread {
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }
-                }
-                else if(!normal2){
+                } else if (!normal2) {
                     String exit_info = "oppExit";
                     byte[] send_exit = exit_info.getBytes();
                     OutputStream os = null;
@@ -166,18 +171,11 @@ public class GameThread extends Thread {
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }
+                } else {
+                    break;
                 }
-                else break;
             }
         }
-//        try {
-//            if (splayer1 != null)
-//                splayer1.close();
-//            if (splayer2 != null)
-//                splayer2.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
         if (normal1 && normal2) {
             try {
                 InputStream is1 = splayer1.getInputStream();

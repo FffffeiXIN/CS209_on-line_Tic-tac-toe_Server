@@ -1,8 +1,6 @@
 package thread;
 
-import Manager.RoomManager;
 import entity.GameRoom;
-
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -10,6 +8,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import manager.RoomManager;
 
 public class RequestThread extends Thread {
     RoomManager roomManager;
@@ -38,17 +37,15 @@ public class RequestThread extends Thread {
 
                 System.out.println(receiveMsg);
                 //处理信息
-//                String name = receiveMsg.split(" ")[0];
-//                String passwd = receiveMsg.split(" ")[1];
                 String name = receiveMsg.split(" ")[0];
                 String operation = receiveMsg.split(" ")[1];
-                if (operation.equals("0")){
+                if (operation.equals("0")) {
                     //连接数据库
                     Connection c = null;
                     Statement stmt = null;
-                    int win=0;
-                    int lose=0;
-                    int draw=0;
+                    int win = 0;
+                    int lose = 0;
+                    int draw = 0;
                     try {
                         Class.forName("org.postgresql.Driver");
                         c = DriverManager.getConnection("jdbc:postgresql://10.16.4.246:5432/cs209_a2",
@@ -87,7 +84,7 @@ public class RequestThread extends Thread {
                         System.exit(0);
                     }
 
-                    String response = win+" "+lose+" "+draw+"\r\n"+roomManager.getInfo();
+                    String response = win + " " + lose + " " + draw + "\r\n" + roomManager.getInfo();
 
                     // 创建packet包对象，封装要发送的包数据和服务器地址和端口号
                     DatagramPacket send_packet = new DatagramPacket(response.getBytes(),
@@ -95,20 +92,16 @@ public class RequestThread extends Thread {
 
                     // 发送消息到服务器
                     socket.send(send_packet);
-                }
-                else if(operation.equals("1")){
+                } else if (operation.equals("1")) {
                     String response = roomManager.getInfo();
                     DatagramPacket send_packet = new DatagramPacket(response.getBytes(),
                             response.getBytes().length, addr, port);
                     socket.send(send_packet);
-                }
-                else {
+                } else {
                     GameRoom room = roomManager.getRoom(name);
                     room.exit();
                 }
             }
-            // 关闭socket
-//            socket.close();
         } catch (Exception e) {
             // TODO: handle exception
             e.printStackTrace();

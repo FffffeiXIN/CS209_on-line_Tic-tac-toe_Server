@@ -1,10 +1,9 @@
 package entity;
 
-import Manager.RoomManager;
-import Manager.ThreadPool;
-import thread.GameThread;
-
 import java.net.Socket;
+import manager.RoomManager;
+import manager.ThreadPool;
+import thread.GameThread;
 
 public class GameRoom {
     public String player1;
@@ -32,7 +31,7 @@ public class GameRoom {
     public void startGame() {
         //可以加exception 当前玩家过多
         thread = ThreadPool.getFreeThread();
-        thread.setPlayer(p1, p2,player1,player2);
+        thread.setPlayer(p1, p2, player1, player2);
         thread.gameRoom = this;
         thread.roomManager = this.roomManager;
         thread.start();
