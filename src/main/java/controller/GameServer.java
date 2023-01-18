@@ -41,9 +41,7 @@ public class GameServer {
                 }
             }
         } catch (Exception e) {
-            // TODO: handle exception
             e.printStackTrace();
-
         }
     }
 }
